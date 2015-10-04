@@ -1,0 +1,11 @@
+http://www.tysto.com/uk-us-spelling-list.html
+
+http://www.mieliestronk.com/wordlist.html
+
+https://github.com/dwyl/english-words
+sudo cat /usr/share/dict/words > words2.txt
+
+http://norvig.com/ngrams/
+
+
+todo : bigrams/ trigrams / 4-grams most common and least common With and without spaces. Generate myself?
