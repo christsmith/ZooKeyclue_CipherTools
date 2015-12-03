@@ -21,13 +21,48 @@
 #define MODE_FORCE                    2
 #define MODE_DEFAULT                  MODE_DECRYPT
 
+bool isUpper(char l)
+{
+    return (l >= 'A' && l <= 'Z');
+}
+
+bool isLower(char l)
+{
+    return (l >= 'a' && l <= 'z');
+}
+
+bool isLetter(char l)
+{
+    return ((l >= 'a' && l <= 'z') ||
+            (l >= 'A' && l <= 'Z'));
+}
+
+int ltoi(char l)
+{
+    int d;
+
+    if(isUpper(l))
+        d = (int)(l - 'A');
+    else if(isLower(l))
+        d = (int)(l - 'a');
+    else
+        d = (int)l;
+    return d;
+}
+
+char itol(int i)
+{
+    return (char)(i + 'a');
+}
 
 void parseinput(int argc, char **argv, int *mode, char *key) {
     int opt;
 
-    while((opt = getopt(argc,argv, "def")) != -1) {
+    while((opt = getopt(argc,argv, "defk")) != -1) {
         switch (opt)
         {
+            case 'k':
+                memcpy(key, optarg, ALPHABET_LENGTH*sizeof(char)); break;
             case 'd':
                 *mode = MODE_DECRYPT; break;
             case 'e':
@@ -42,16 +77,16 @@ void invert_key(char *key)
 {
     int key_length;
     char *key_copy;
+    int i;
 
     key_length = strlen(key);
     key_copy = (char*)malloc(key_length * sizeof(*key));
     memcpy(key_copy, key, key_length * sizeof(*key));
 
-    std::cout << "key_copy " << key_copy << std::endl;
-    std::cout << "key " << key << std::endl;
-
-
-
+    for(i = 0; i < key_length; i++)
+    {
+        key[ltoi(key_copy[i])] = itol(i);
+    }
     free(key_copy);
 }
 
@@ -68,8 +103,12 @@ void substitution_encrypt(const char *text, char *cipher, char *key) {
     char c;
 
     i = 0;
-    while((c = cipher[i]) != '\0')
+    while((c = text[i]) != '\0') //TODO
     {
+        if(isLetter(c))
+            cipher[i] = key[ltoi(c)];
+        else
+            cipher[i] = c;
         i++;
     }
     cipher[i] = '\0';
@@ -78,9 +117,15 @@ void substitution_encrypt(const char *text, char *cipher, char *key) {
 int substitution_decrypt(const char *cipher, char *text, char *key) {
     int i;
     char c;
+
+    invert_key(key);
     i = 0;
-    while((c = cipher[i]) != '\0')
+    while((c = cipher[i]) != '\0') //TODO
     {
+        if(isLetter(c))
+            text[i] = key[ltoi(c)];
+        else
+            text[i] = c;
         i++;
     }
     text[i] = '\0';
@@ -114,7 +159,11 @@ int main(int argc, char **argv) {
 
     int mode = MODE_DEFAULT;
 
-    /*parseinput(argc, argv, &mode, &a, &b);
+    char key[ALPHABET_LENGTH + 1];
+    char text[TEXT_MAX_LENGTH];
+    char cipher[TEXT_MAX_LENGTH];
+
+    parseinput(argc, argv, &mode, key);
     if(argc - optind == 0)
     {
         printf("No file provided\n");
@@ -125,18 +174,17 @@ int main(int argc, char **argv) {
     switch(mode)
     {
         case MODE_ENCRYPT:
-            affine_Encrypt(input, output, a, b);
+            substitution_encrypt(input, output, key);
             printf("%s\n", output);
             break;
         case MODE_DECRYPT:
-            affine_Decrypt(input, output, a, b);
+            substitution_decrypt(input, output, key);
             printf("%s\n", output);
             break;
         case MODE_FORCE:
-            affine_Force(input, output, a, b);
+            //affine_Force(input, output, a, b);
             break;
     }
-    */
 
 
     return 0;

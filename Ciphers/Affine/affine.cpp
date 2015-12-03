@@ -6,15 +6,17 @@
 #include <getopt.h>
 #include <fstream>
 
-/*LIST OF TODO*/
-/* encript Affine */
-/* decript Affine */
-/* force decript Affine */
+#include "cipherTools.h"
 
-/* Global runtime variables */
-
-#define ALPHABET_LENGTH               26
-#define TEXT_MAX_LENGTH               100
+/*LIST OF TODO
+ *
+ * Decide how option variables should work.
+ *      -static global
+ *      -declared in main
+ *      -use preprocessor
+ *
+ * Decide formatting for force so it can be easily parsed.
+ */
 
 #define MODE_ENCRYPT                  0
 #define MODE_DECRYPT                  1
@@ -46,7 +48,6 @@ void parseinput(int argc, char **argv, int *mode, int *a, int *b) {
     }
 }
 
-//TODO investigate a better algorithm (Edit: Not worth the effort)
 int modinv(int a, int m)
 {
     int i;
@@ -61,7 +62,8 @@ int modinv(int a, int m)
         return i;
 }
 
-void affine_Encrypt(const char *text, char *cipher, int a, int b) {
+void affine_Encrypt(const char *text, char *cipher, int a, int b)
+{
     int i;
     char c;
 
@@ -79,7 +81,8 @@ void affine_Encrypt(const char *text, char *cipher, int a, int b) {
     cipher[i] = '\0';
 }
 
-int affine_Decrypt(const char *cipher, char *text, int a, int b) {
+int affine_Decrypt(const char *cipher, char *text, int a, int b)
+{
     int i;
     char c;
 
@@ -102,7 +105,8 @@ int affine_Decrypt(const char *cipher, char *text, int a, int b) {
     return 0;
 }
 
-void affine_Force(const char *cipher, char *text, int max_a, int max_b) {
+void affine_Force(const char *cipher, char *text, int max_a, int max_b)
+{
     int b;
     int a;
 
@@ -116,26 +120,27 @@ void affine_Force(const char *cipher, char *text, int max_a, int max_b) {
     }
 }
 
+/*
 //TODO use realloc with shorter max size
-int fileIn(char * fileName, char ** input, char ** output) {
-    std::ifstream iFile(*input);
+int fileIn(char * fileName, char * input)
+{
+    std::ifstream iFile(input);
     iFile.open(fileName, std::ifstream::in);
     if(!iFile.is_open())
         return -1;
 
-    *input = (char*)malloc(TEXT_MAX_LENGTH);
-    *output = (char*)malloc(TEXT_MAX_LENGTH);
-
-    iFile.getline(*input, TEXT_MAX_LENGTH);
+    iFile.getline(input, TEXT_MAX_LENGTH);
 
     iFile.close();
     return 0;
 }
+*/
 
-int main(int argc, char **argv) {
+int main(int argc, char **argv)
+{
 
-    char *input = NULL;
-    char *output = NULL;
+    char input[TEXT_MAX_LENGTH];
+    char output[TEXT_MAX_LENGTH];
     char *fileName;
 
     int a = AFFINE_A_DEFAULT;
@@ -149,7 +154,7 @@ int main(int argc, char **argv) {
         return 1;
     }
     fileName = argv[optind];
-    fileIn(fileName, &input, &output);
+    fileIn(fileName, input);
     switch(mode)
     {
         case MODE_ENCRYPT:
@@ -164,7 +169,6 @@ int main(int argc, char **argv) {
             affine_Force(input, output, a, b);
             break;
     }
-
 
     return 0;
 }

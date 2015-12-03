@@ -1,8 +1,7 @@
+#include <fstream>
+#include "cipherTools.h"
 
-#if defined (CIPHER_TOOLS_H)
-#define CIPHER_TOOLS_H
-
-
+/*
 int ltoi(char l)
 {
     int d;
@@ -25,6 +24,19 @@ bool isLower(char l)
 {
     return ('a' <= l <= 'z');
 }
+*/
 
-#endif // CIPHER_TOOLS_H
+//TODO use realloc with shorter max size
+int fileIn(char * fileName, char * input)
+{
+    std::ifstream iFile(input);
+    iFile.open(fileName, std::ifstream::in);
+    if(!iFile.is_open())
+        return -1;
+
+    iFile.getline(input, TEXT_MAX_LENGTH);
+
+    iFile.close();
+    return 0;
+}
 

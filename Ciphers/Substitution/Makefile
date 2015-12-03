@@ -1,4 +1,5 @@
-substitution:
-	g++ substitution.cpp -o substitution
+substitution: substitution
+	g++ -o substitution substitution.cpp
 clean:
 	rm substitution
+
