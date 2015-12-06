@@ -1,0 +1,13 @@
+#! /bin/bash
+#Generate a list of words ordered by frequency
+
+cat ${1:? "Missing input file argument"}            |  \
+    tr " " "\n"                                     |  \
+    tr -d {$2:-'.,?!<>(){}[]1234567890/"+=_/'\\\'}  |  \
+    sed '/^$/d'                                     |  \
+    sort                                            |  \
+    uniq -c                                         |  \
+    uniq -u                                         |  \
+    sort -r                                         |  \
+    tr  -d \ 1234567890
+
