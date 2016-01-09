@@ -3,50 +3,13 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <stdbool.h>
-#include <getopt.h>
 #include <fstream>
+#include <string>
 
 #include "cipherTools.h"
+#include "affine.h"
 
-/*LIST OF TODO
- *
- * Decide how option variables should work.
- *      -static global
- *      -declared in main
- *      -use preprocessor
- *
- * Decide formatting for force so it can be easily parsed.
- */
-
-#define MODE_ENCRYPT                  0
-#define MODE_DECRYPT                  1
-#define MODE_FORCE                    2
-#define MODE_DEFAULT                  MODE_DECRYPT
-
-#define AFFINE_A_DEFAULT              1
-#define AFFINE_B_DEFAULT              0
-#define AFFINE_M_DEFAULT              ALPHABET_LENGTH
-#define AFFINE_MODE_DEFAULT           MODE_DECRYPT
-
-void parseinput(int argc, char **argv, int *mode, int *a, int *b) {
-    int opt;
-
-    while((opt = getopt(argc,argv, "defa:b:")) != -1) {
-        switch (opt)
-        {
-            case 'd':
-                *mode = MODE_DECRYPT; break;
-            case 'e':
-                *mode = MODE_ENCRYPT; break;
-            case 'f':
-                *mode = MODE_FORCE; break;
-            case 'a':
-                *a = atoi(optarg); break;
-            case 'b':
-                *b = atoi(optarg); break;
-        }
-    }
-}
+int modinv(int a, int m);
 
 int modinv(int a, int m)
 {
@@ -62,114 +25,65 @@ int modinv(int a, int m)
         return i;
 }
 
-void affine_Encrypt(const char *text, char *cipher, int a, int b)
+int affine_Encrypt(const std::string &text, std::string &cipher, int a, int b)
 {
-    int i;
     char c;
 
-    i = 0;
-    while((c = cipher[i]) != '\0')
+    cipher.resize(text.size());
+
+    for(int i  = 0; i < text.size(); i++)
     {
-        if(c >= 'A' && c <= 'Z')
+        c = text[i];
+        if(isUpper(c))
             cipher[i] = (((a * (c - 'A')) + b) % ALPHABET_LENGTH) + 'A';
-        else if(c >= 'a' && c <= 'z')
+        else if(isLower(c))
             cipher[i] = (((a * (c - 'a')) + b) % ALPHABET_LENGTH) + 'a';
         else
             cipher[i] = c;
-        i++;
     }
-    cipher[i] = '\0';
+    return 0;
 }
 
-int affine_Decrypt(const char *cipher, char *text, int a, int b)
+int affine_Decrypt(const std::string &cipher, std::string &text, int a, int b)
 {
-    int i;
     char c;
+
+    text.resize(cipher.size());
 
     a = modinv(a, ALPHABET_LENGTH);
     if(a == -1)
         return 1;
 
-    i = 0;
-    while((c = cipher[i]) != '\0')
+    for(int i  = 0; i < cipher.size(); i++)
     {
-        if(c >= 'A' && c <= 'Z')
+        c = cipher[i];
+        if(isUpper(c))
             text[i] = ((((c - 'A') - b + ALPHABET_LENGTH) * a) % ALPHABET_LENGTH) + 'A';
-        else if(c >= 'a' && c <= 'z')
+        else if(isLower(c))
             text[i] = ((((c - 'a') - b + ALPHABET_LENGTH) * a) % ALPHABET_LENGTH) + 'a';
         else
             text[i] = c;
-        i++;
     }
-    text[i] = '\0';
     return 0;
 }
 
-void affine_Force(const char *cipher, char *text, int max_a, int max_b)
+//Speed is important and real time feedback is important in this case. Print as soon as results are made available!
+int affine_Force_Brute(const std::string &cipher, int max_a, int max_b)
 {
-    int b;
-    int a;
+    std::string text;
 
-    for(int b = 1; b <= max_b; b++)
+    text.resize(cipher.size());
+
+    for(int b = 0; b <= max_b; b++)
     {
         for(int a = 1; a <= max_a; a++)
         {
             if(affine_Decrypt(cipher, text, a, b) == 0)
-                printf("a=%d,b=%d:%s\n", a,b,text);
+                std::cout << "a=" << a << ", "
+                          << "b=" << b << ","
+                          << std::endl << text << std::endl;
         }
     }
-}
-
-/*
-//TODO use realloc with shorter max size
-int fileIn(char * fileName, char * input)
-{
-    std::ifstream iFile(input);
-    iFile.open(fileName, std::ifstream::in);
-    if(!iFile.is_open())
-        return -1;
-
-    iFile.getline(input, TEXT_MAX_LENGTH);
-
-    iFile.close();
-    return 0;
-}
-*/
-
-int main(int argc, char **argv)
-{
-
-    char input[TEXT_MAX_LENGTH];
-    char output[TEXT_MAX_LENGTH];
-    char *fileName;
-
-    int a = AFFINE_A_DEFAULT;
-    int b = AFFINE_B_DEFAULT;
-    int mode = AFFINE_MODE_DEFAULT;
-
-    parseinput(argc, argv, &mode, &a, &b);
-    if(argc - optind == 0)
-    {
-        printf("No file provided\n");
-        return 1;
-    }
-    fileName = argv[optind];
-    fileIn(fileName, input);
-    switch(mode)
-    {
-        case MODE_ENCRYPT:
-            affine_Encrypt(input, output, a, b);
-            printf("%s\n", output);
-            break;
-        case MODE_DECRYPT:
-            affine_Decrypt(input, output, a, b);
-            printf("%s\n", output);
-            break;
-        case MODE_FORCE:
-            affine_Force(input, output, a, b);
-            break;
-    }
-
     return 0;
 }
 
